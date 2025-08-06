@@ -1,7 +1,8 @@
+from django.db.models import Count
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, viewsets
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.generics import UpdateAPIView
+from rest_framework.generics import UpdateAPIView, RetrieveAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -76,3 +77,38 @@ class LocationViewSet(viewsets.ModelViewSet):
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
     permission_classes = [IsAuthenticated]
+
+
+class ListingRetrieveView(RetrieveAPIView):
+    """Получаем объявление по id
+       Увеличиваем views_count на 1
+       Обновляем данные в базе
+       Возвращаем сериализованные данные объявления
+    """
+
+    queryset = Listing.objects.all()
+    serializer_class = ListingSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.views_count = F('views_count') + 1
+        instance.save(update_fields=['views_count'])
+        instance.refresh_from_db()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+class PopularListingsView(ListAPIView):
+    """сортировка по просмотрам"""
+    serializer_class = ListingSerializer
+
+    def get_queryset(self):
+        return Listing.objects.order_by('-views_count')
+
+
+class MostReviewedListingsView(ListAPIView):
+    """сортировка по количеству отзывов"""
+    serializer_class = ListingSerializer
+
+    def get_queryset(self):
+        return Listing.objects.annotate(num_reviews=Count('reviews')).order_by('-num_reviews')
+

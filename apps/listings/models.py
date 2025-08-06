@@ -2,6 +2,8 @@ from django.db import models
 from .choices.property_types import PROPERTY_TYPES
 from apps.users.models import User
 from django.contrib import admin
+from django.db.models import Avg
+
 
 
 
@@ -97,6 +99,8 @@ class Listing(models.Model):
         related_name='listings'
     )
 
+    def average_rating(self):
+        return self.reviews.filter(is_published=True).aggregate(avg=Avg('rating'))['avg'] or 0
 
     def is_available(self, start_date, end_date):
         """проверка на доступность объекта, на выбраные даты,

@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from apps.listings.choices.property_types import PROPERTY_TYPES
 from apps.listings.models import Listing, Location
 from django.contrib.auth.models import Group
@@ -19,6 +18,8 @@ class ListingSerializer(serializers.ModelSerializer):
     # Вложенный сериализатор для связи с Location (OneToOne / ForeignKey)
     location = LocationSerializer()
     property_type = serializers.ChoiceField(choices=PROPERTY_TYPES.choices())
+    average_rating = serializers.SerializerMethodField()
+
 
     class Meta:
         model = Listing
@@ -26,6 +27,11 @@ class ListingSerializer(serializers.ModelSerializer):
         # exclude = ['owner', 'views_count', 'created_at', 'updated_at']
         fields = '__all__'
         read_only_fields = ['owner', 'views_count', 'created_at', 'updated_at']
+
+    def get_average_rating(self, obj):
+        return round(obj.average_rating(), 1)
+
+
 
     # 🎯 Метод для создания нового объекта Listing
     def create(self, validated_data):
@@ -72,6 +78,8 @@ class ListingSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
 
 """
  📌 LocationSerializer: отдельный сериализатор для адреса, встроенный в ListingSerializer.
