@@ -1,0 +1,25 @@
+# created by virtualenv automatically
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.log
+
+# Django
+db.sqlite3
+*.env
+*.pem
+
+# Virtual environment
+venv/
+env/
+
+# macOS
+.DS_Store
+
+# Docker
+docker-compose.override.yml
+
+# VS Code
+.vscode/
