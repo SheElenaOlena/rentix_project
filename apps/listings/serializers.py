@@ -46,6 +46,7 @@ class ListingSerializer(serializers.ModelSerializer):
         with transaction.atomic():
             # Создаём объект Location (связь один-к-одному или внешний ключ)
             location = Location.objects.create(**location_data)
+            validated_data.pop('owner', None)  # 💡 Удаляем owner, если он есть, иначе ошибка 500
             # Создаём новое объявление и связываем с локацией и владельцем
             listing = Listing.objects.create(location=location, owner=user, **validated_data)
 

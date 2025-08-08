@@ -1,6 +1,6 @@
 from django.db.models import Q
 from apps.listings.models import Listing
-from apps.bookings.models import Booking
+from apps.booking.models import Booking
 
 
 """фильтрацию по датам и статусу объявления"""

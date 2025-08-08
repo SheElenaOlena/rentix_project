@@ -23,6 +23,7 @@ from rest_framework_simplejwt.views import (
 )
 
 from apps import booking
+from apps.reviews.views import ReviewCreateView, ListingReviewsView
 from apps.users.views import ProfileView
 
 urlpatterns = [
@@ -35,5 +36,9 @@ urlpatterns = [
         path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
         path('api/profile/', ProfileView.as_view()),
         path('api/bookings/', include('apps.booking.urls')),
+        path('listings/<int:listing_id>/reviews/', ListingReviewsView.as_view(), name='listing-reviews'),
+        path('listings/<int:listing_id>/reviews/create/', ReviewCreateView.as_view(), name='review-create'),
+
+
 ]
 

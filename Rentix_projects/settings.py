@@ -96,7 +96,7 @@ REST_FRAMEWORK = {
 
     # 🌐 Пагинация — можно использовать LimitOffsetPagination или PageNumberPagination
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 5,
 
     # 📦 Фильтрация — пригодится для поиска и сортировки объявлений
     'DEFAULT_FILTER_BACKENDS': (

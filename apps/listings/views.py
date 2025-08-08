@@ -41,10 +41,10 @@ class ListingViewSet(ModelViewSet):
         # Меняем роль пользователя, если он был Tenant
         user = self.request.user
 
-        if user.role == Role.TENANT:
-            user.role = Role.LANDLORD
+        if user.role == Role.TENANT.value:
+            user.role = Role.LANDLORD.value
             user.save()
-            print("Роль изменена:", user.role)  # ← Проверка в консоли
+        print("Роль изменена:", user.role)  # ← Проверка в консоли
 
 
 class ListingUpdateView(UpdateAPIView):
