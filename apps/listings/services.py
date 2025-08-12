@@ -3,6 +3,7 @@ from apps.listings.models import Listing
 from apps.booking.models import Booking
 
 
+
 """фильтрацию по датам и статусу объявления"""
 def get_available_listings(check_in, check_out):
     from apps.listings.choices.booking_statuses import BookingStatus

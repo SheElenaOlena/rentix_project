@@ -26,8 +26,10 @@ class IsLandlord(permissions.BasePermission):
     def has_permission(self, request, view):
         return (
             request.user and
-            request.user.is_authenticated and
-            request.user.role == 'landlord'
+            request.user.is_authenticated and (
+            request.user.role == 'landlord' or
+            request.user.groups.filter(name='Landlord').exists()
+            )
         )
 
 # 👤 3. Разрешено только пользователям с ролью 'tenant'
@@ -41,8 +43,10 @@ class IsTenant(permissions.BasePermission):
     def has_permission(self, request, view):
         return (
             request.user and
-            request.user.is_authenticated and
-            request.user.role == 'tenant'
+            request.user.is_authenticated and (
+            request.user.role == 'tenant' or
+            request.user.groups.filter(name='Tenant').exists()
+            )
         )
 
 # 🎯 4. Комбинированный класс: только арендодателю, и только к своему объявлению
@@ -57,9 +61,28 @@ class IsLandlordOwnerOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
+
         # ✏️ Изменение — только арендодатель и только своего объекта
         return (
-            request.user.is_authenticated and
-            request.user.role == 'landlord' and
-            obj.owner == request.user
+                request.user.is_authenticated and (
+                request.user.role == 'landlord' or
+                request.user.groups.filter(name='Landlord').exists()
+        ) and obj.owner == request.user
+        )
+
+
+class IsAdmin(permissions.BasePermission):
+    """
+    Доступ только для пользователей с ролью 'admin' или в группе 'Admin'.
+    """
+
+    message = "Только администраторы могут выполнить это действие."
+
+    def has_permission(self, request, view):
+        return (
+            request.user and
+            request.user.is_authenticated and (
+                request.user.role == 'admin' or
+                request.user.groups.filter(name='Admin').exists()
+            )
         )

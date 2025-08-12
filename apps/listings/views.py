@@ -1,35 +1,69 @@
-from django.db.models import Count
+from django.contrib.auth.models import AnonymousUser
+from django.db.models import Count, F
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, viewsets
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.generics import UpdateAPIView, RetrieveAPIView, ListAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
-
+from rest_framework.viewsets import ModelViewSet, ViewSet
+from apps.users.models import User
 from apps.listings.choices.property_types import PROPERTY_TYPES
 from apps.listings.choices.roles import Role
 from apps.listings.filters import ListingFilter
 from apps.listings.models import Listing, Location
 from apps.listings.serializers import ListingSerializer, LocationSerializer
 from apps.users.permissions import IsLandlordOwnerOrReadOnly, IsTenant
+from typing import Union
+
 
 
 class ListingViewSet(ModelViewSet):
     queryset = Listing.objects.filter(is_active=True)
-    # queryset = Listing.objects.all()
+    queryset = Listing.objects.all()
     serializer_class = ListingSerializer
-    permission_classes = [IsAuthenticated, IsLandlordOwnerOrReadOnly]
+    # permission_classes = [IsAuthenticated, IsLandlordOwnerOrReadOnly]
+    permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     search_fields = ['title', 'description']
     filterset_class = ListingFilter
     ordering_fields = ['price', 'created_at']
     ordering = ['-created_at']
 
+    # def list(self, request):
+    #     return Response({"message": "It works with or without token!"})
+
     def get_queryset(self):
-        # Показываем только объявления текущего пользователя
-        return self.queryset.filter(owner=self.request.user)
+        # user = self.request.user
+        # user: User = self.request.user
+        user: Union[User, AnonymousUser] = self.request.user
+
+        if not user.is_authenticated:
+            return Listing.objects.none()  # или вызвать PermissionDenied
+
+        if user.is_superuser:
+            return Listing.objects.all()
+
+        if hasattr(user, 'role'):
+            if user.role == Role.TENANT.value:
+                return Listing.objects.filter(is_active=True)
+            elif user.role == Role.LANDLORD.value:
+                # Показываем только объявления текущего пользователя
+                return Listing.objects.filter(owner=user)
+
+        # Если роль не указана или неизвестна — ничего не показываем
+        return Listing.objects.none()
+
+    # def list(self, request, *args, **kwargs):
+    #     queryset = self.filter_queryset(self.get_queryset())
+    #     page = self.paginate_queryset(queryset)
+    #     if page is not None:
+    #         serializer = self.get_serializer(page, many=True)
+    #         return self.get_paginated_response(serializer.data)
+    #
+    #     serializer = self.get_serializer(queryset, many=True)
+    #     return Response(serializer.data)
 
     """вызывается после проверки данныхlistings_location
       передать текущего пользователя (request.user) как владельца объявления.
@@ -69,7 +103,10 @@ class PropertyTypeChoicesView(APIView):
 class ListingListView(generics.ListAPIView):
     queryset = Listing.objects.filter(is_active=True)
     serializer_class = ListingSerializer
-    permission_classes = [IsAuthenticated, IsTenant]
+    # permission_classes = [IsAuthenticated, IsTenant]
+
+    def get(self, request):
+        return Response({"message": "It works!"})
 
 
 # views.py

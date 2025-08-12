@@ -21,16 +21,18 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
-from apps import booking
+from apps import booking, listings
+from apps.listings.views import ListingListView
 from apps.reviews.views import ReviewCreateView, ListingReviewsView
 from apps.users.views import ProfileView
 
 urlpatterns = [
         path('admin/', admin.site.urls),
-        path('api/', include('apps.listings.urls')),  # все API для listings будут на /api/listings/
+
+        path('', include('apps.listings.urls')),
+        # path('api/', include('apps.listings.urls')),  # все API для listings будут на /api/listings/
         path('api/users/', include('apps.users.urls')),   # 🔗 Подключение маршрутов из приложения "users"
-        path('login/', auth_views.LoginView.as_view(), name='login'),
+        path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
         path('logout/', auth_views.LogoutView.as_view(), name='logout'),
         path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
         path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
@@ -38,6 +40,8 @@ urlpatterns = [
         path('api/bookings/', include('apps.booking.urls')),
         path('listings/<int:listing_id>/reviews/', ListingReviewsView.as_view(), name='listing-reviews'),
         path('listings/<int:listing_id>/reviews/create/', ReviewCreateView.as_view(), name='review-create'),
+        # path('listings/', ListingListView.as_view(), name='listings'),
+        path('listings/', include('apps.listings.urls')),
 
 
 ]

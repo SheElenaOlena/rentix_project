@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
+
 from apps.listings.choices.property_types import PROPERTY_TYPES
 from apps.listings.models import Listing, Location
 from django.contrib.auth.models import Group
@@ -10,13 +12,14 @@ from django.db import transaction
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
+
         fields = ['city', 'street', 'house_number', 'country', 'postal_code']  # Поля, которые будут сериализованы
 
 
 # 📋 Сериализатор для основной модели Listing
 class ListingSerializer(serializers.ModelSerializer):
     # Вложенный сериализатор для связи с Location (OneToOne / ForeignKey)
-    location = LocationSerializer()
+    location = serializers.StringRelatedField()
     property_type = serializers.ChoiceField(choices=PROPERTY_TYPES.choices())
     average_rating = serializers.SerializerMethodField()
 
@@ -27,6 +30,7 @@ class ListingSerializer(serializers.ModelSerializer):
         # exclude = ['owner', 'views_count', 'created_at', 'updated_at']
         fields = '__all__'
         read_only_fields = ['owner', 'views_count', 'created_at', 'updated_at']
+
 
     def get_average_rating(self, obj):
         return round(obj.average_rating(), 1)
@@ -39,6 +43,7 @@ class ListingSerializer(serializers.ModelSerializer):
         location_data = validated_data.pop('location', None)
         # Получаем текущего пользователя из контекста сериализатора
         user = self.context['request'].user
+
 
         if not location_data:
             raise serializers.ValidationError({'location': 'Поле "location" обязательно для создания объявления.'})
@@ -61,24 +66,45 @@ class ListingSerializer(serializers.ModelSerializer):
 
     # 🔄 Метод для обновления существующего объекта Listing и связанной локации
     def update(self, instance, validated_data):
+        user = self.context['request'].user
+
+        # 🔐 Проверка: только арендодатель и только своего объявления
+        if user.role != 'landlord' or instance.owner != user:
+            raise PermissionDenied("Вы не можете редактировать это объявление.")
+
         # Попытка получить вложенные данные локации (если они были отправлены)
         location_data = validated_data.pop('location', None)
-        if not isinstance(location_data, dict):
-            raise serializers.ValidationError({'location': 'Некорректные данные локации — ожидается словарь.'})
 
+        # Обновление location, если оно передано
         if location_data:
-            # Получаем связанную локацию и обновляем её поля
             location_instance = instance.location
             for attr, value in location_data.items():
                 setattr(location_instance, attr, value)
             location_instance.save()
 
-        # Обновляем остальные поля модели Listing
+        # Обновление остальных полей Listing
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
         instance.save()
         return instance
+
+        # if not isinstance(location_data, dict):
+        #     raise serializers.ValidationError({'location': 'Некорректные данные локации — ожидается словарь.'})
+        #
+        # if location_data:
+        #     # Получаем связанную локацию и обновляем её поля
+        #     location_instance = instance.location
+        #     for attr, value in location_data.items():
+        #         setattr(location_instance, attr, value)
+        #     location_instance.save()
+        #
+        # # Обновляем остальные поля модели Listing
+        # for attr, value in validated_data.items():
+        #     setattr(instance, attr, value)
+        #
+        # instance.save()
+        # return instance
 
 
 

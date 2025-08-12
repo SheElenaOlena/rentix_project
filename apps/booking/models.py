@@ -6,6 +6,8 @@ from apps.users.models import User
 from apps.listings.models import Listing
 from apps.listings.choices.booking_statuses import BookingStatus
 from django.utils import timezone
+from datetime import timedelta
+
 
 
 
@@ -26,10 +28,14 @@ class Booking(models.Model):
 
     status = models.CharField(
         max_length=20,
-        choices=BookingStatus.choices(),
-        default=BookingStatus.PENDING,
+        choices=[(tag.value, tag.name) for tag in BookingStatus],
+        default=BookingStatus.PENDING.value,
     )
-    is_confirmed = models.BooleanField(default=False)
+
+    @property
+    def is_confirmed(self):
+        return self.status == BookingStatus.CONFIRMED.value
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -57,36 +63,42 @@ class Booking(models.Model):
         if overlapping.exists():
             raise ValidationError('Выбранные даты уже заняты другим бронированием.')
 
+    # 🔄 Отмена бронирования арендатором
+    def cancel(self):
+        if not self.is_confirmed:
+            raise ValidationError("Можно отменить только подтверждённое бронирование.")
+
+        if self.cancel_deadline and timezone.now().date() > self.cancel_deadline:
+            raise ValidationError("Срок отмены истёк.")
+
+        self.status = BookingStatus.CANCELLED.value
+        self.save()
+
     def save(self, *args, **kwargs):
+        if not self.cancel_deadline and self.check_in:
+            self.cancel_deadline = self.check_in - timedelta(days=2)
         self.full_clean()
         super().save(*args, **kwargs)
 
+    # def save(self, *args, **kwargs):
+    #     self.full_clean()
+    #     super().save(*args, **kwargs)
+
     # ✅ Подтвердить бронирование
     def confirm(self) -> None:
-        if self.status != BookingStatus.PENDING:  #статус бронирования — PENDING
+        if self.status != BookingStatus.PENDING.value:  #статус бронирования — PENDING
             raise ValidationError('Только PENDING бронирование можно подтвердить.')
 
-        self.status = BookingStatus.CONFIRMED   #Обновляет статус на CONFIRMED
-        self.is_confirmed = True
+        self.status = BookingStatus.CONFIRMED.value   #Обновляет статус на CONFIRMED
         self.save()                             #Сохраняет изменения в базе
 
     # ❌ Отклонить бронирование
     def reject(self):
-        if self.status != BookingStatus.PENDING:
+        if self.status != BookingStatus.PENDING.value:
             raise ValidationError('Только PENDING бронирование можно подтвердить.')
 
-        self.status = BookingStatus.REJECTED
-        self.is_confirmed = False
+        self.status = BookingStatus.REJECTED.value
         self.save()
 
-    # 🔄 Отменить бронирование арендатором
-    def cancel(self):
-        if self.status != BookingStatus.CONFIRMED:
-            raise ValidationError('Можно отменить только подтверждённое бронирование.')
 
-        if self.cancel_deadline and timezone.now().date() > self.cancel_deadline:
-            raise ValidationError('Срок отмены истёк.')
-
-        self.status = BookingStatus.CANCELLED
-        self.save()
 
