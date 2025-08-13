@@ -89,24 +89,6 @@ class ListingSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-        # if not isinstance(location_data, dict):
-        #     raise serializers.ValidationError({'location': 'Некорректные данные локации — ожидается словарь.'})
-        #
-        # if location_data:
-        #     # Получаем связанную локацию и обновляем её поля
-        #     location_instance = instance.location
-        #     for attr, value in location_data.items():
-        #         setattr(location_instance, attr, value)
-        #     location_instance.save()
-        #
-        # # Обновляем остальные поля модели Listing
-        # for attr, value in validated_data.items():
-        #     setattr(instance, attr, value)
-        #
-        # instance.save()
-        # return instance
-
-
 
 """
  📌 LocationSerializer: отдельный сериализатор для адреса, встроенный в ListingSerializer.

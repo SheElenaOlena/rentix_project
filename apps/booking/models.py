@@ -80,9 +80,6 @@ class Booking(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
-    # def save(self, *args, **kwargs):
-    #     self.full_clean()
-    #     super().save(*args, **kwargs)
 
     # ✅ Подтвердить бронирование
     def confirm(self) -> None:

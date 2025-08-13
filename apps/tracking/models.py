@@ -6,6 +6,7 @@ from apps.listings.models import Listing
 
 
 
+
 """История просмотров"""
 class ViewHistory(models.Model):
     """сохранять запросы и просмотры от анонимных гостей"""

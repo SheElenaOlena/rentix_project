@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+
+
+os.environ["PATH"] += os.pathsep + r"C:\Program Files\Graphviz\bin"
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     # Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
@@ -120,9 +126,18 @@ WSGI_APPLICATION = 'Rentix_projects.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': BASE_DIR / 'db.sqlite3',
+    # }
+
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': '111124_Marshalova',   # имя твоей базы
+        'USER': 'ich1',         # имя пользователя MySQL
+        'PASSWORD': 'ich1_password_ilovedbs',     # пароль пользователя
+        'HOST': 'ich-edit.edu.itcareerhub.de',  # адрес сервера
+        'PORT': '3306',
     }
 }
 

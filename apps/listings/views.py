@@ -21,7 +21,7 @@ from typing import Union
 
 class ListingViewSet(ModelViewSet):
     queryset = Listing.objects.filter(is_active=True)
-    queryset = Listing.objects.all()
+    # queryset = Listing.objects.all()
     serializer_class = ListingSerializer
     # permission_classes = [IsAuthenticated, IsLandlordOwnerOrReadOnly]
     permission_classes = [AllowAny]
@@ -54,16 +54,6 @@ class ListingViewSet(ModelViewSet):
 
         # Если роль не указана или неизвестна — ничего не показываем
         return Listing.objects.none()
-
-    # def list(self, request, *args, **kwargs):
-    #     queryset = self.filter_queryset(self.get_queryset())
-    #     page = self.paginate_queryset(queryset)
-    #     if page is not None:
-    #         serializer = self.get_serializer(page, many=True)
-    #         return self.get_paginated_response(serializer.data)
-    #
-    #     serializer = self.get_serializer(queryset, many=True)
-    #     return Response(serializer.data)
 
     """вызывается после проверки данныхlistings_location
       передать текущего пользователя (request.user) как владельца объявления.
@@ -103,7 +93,7 @@ class PropertyTypeChoicesView(APIView):
 class ListingListView(generics.ListAPIView):
     queryset = Listing.objects.filter(is_active=True)
     serializer_class = ListingSerializer
-    # permission_classes = [IsAuthenticated, IsTenant]
+    permission_classes = [IsAuthenticated, IsTenant]
 
     def get(self, request):
         return Response({"message": "It works!"})

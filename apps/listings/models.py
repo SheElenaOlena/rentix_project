@@ -8,6 +8,7 @@ from django.db.models import Avg
 
 
 
+
 class Location(models.Model):
     """Адрес объекта"""
     city = models.CharField(
